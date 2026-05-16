@@ -1,0 +1,3 @@
+This is a comprehensive guide to Python programming. It covers variables,
+functions, classes, and modules. Perfect for absolute beginners who want to
+learn to code using Python 3.

@@ -1,0 +1,1 @@
+A beginner-friendly Python tutorial covering fundamentals.
