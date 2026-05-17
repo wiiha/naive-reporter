@@ -27,6 +27,7 @@ dev = [
 [project.scripts]
 naive-reporter = "naive_reporter.cli:main"
 naive-reporter-search = "naive_reporter.search_cli:main"
+naive-reporter-report = "naive_reporter.report_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

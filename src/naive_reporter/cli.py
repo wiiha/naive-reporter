@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
             process_one(pdf_path, stem, data_dir, pdf_hash)
         except Exception:
             logger.exception(
-                "Failed to process %s — left in source for retry", pdf_path.name
+                "Failed to fully process %s", pdf_path.name
             )
 
     return 0

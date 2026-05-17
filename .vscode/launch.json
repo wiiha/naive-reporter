@@ -5,10 +5,26 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python Debugger: naive-reporter",
+      "name": "Python Debugger: naive-reporter (ingest)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/src/naive_reporter/__main__.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: naive-reporter-search",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/naive_reporter/search_cli.py",
+      "args": ["${input:searchQuery}", "--show-summary"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: naive-reporter-report",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/naive_reporter/report_cli.py",
+      "args": ["${input:reportPrompt}"],
       "console": "integratedTerminal"
     },
     {
@@ -17,6 +33,20 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "searchQuery",
+      "type": "promptString",
+      "description": "Enter your search query",
+      "default": ""
+    },
+    {
+      "id": "reportPrompt",
+      "type": "promptString",
+      "description": "Enter your report prompt",
+      "default": ""
     }
   ]
 }

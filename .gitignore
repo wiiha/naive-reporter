@@ -39,3 +39,7 @@ test_pdfs/
 test_data/
 .wichy/results.db-shm
 .wichy/results.db-wal
+PLAN.md
+.gitignore
+VERIFICATION.md
+SPEC.md

@@ -15,6 +15,9 @@
 1. **[2026-05-15] No Python file may exceed 8200 characters**
    Do instead: if a `.py` file approaches or exceeds 8200 chars, treat it as a signal to refactor — split into smaller modules or extract functions/classes. Enforce this at build time; never let files grow past the limit.
 
+2. **[2026-05-16] Retry loops must pass feedback into the generator on retry**
+   Do instead: when a validation/retry loop regenerates content, the `generate_fn` must receive `(previous_result, feedback_reason)` so the LLM can correct the prior attempt. A stateless `generate_fn` produces identical output on every retry.
+
 ## Shell & Command Reliability
 
 1. **[2026-05-15] On startup, check for venv at `/home/wichy/venv`**
@@ -30,6 +33,9 @@
 
 3. **[2026-05-15] Content-hash deduplication, not filename-based**
    Do instead: compute SHA-256 of PDF contents, store in `data/seen_hashes/`. Skip if hash exists. Only use filename suffix (`_1`, `_2`) when hash is new but filename collides in `processed/`.
+
+4. **[2026-05-16] Validation response: accept `<VALID>` without colon**
+   Do instead: parse validation responses defensively — `"VALID"` (no colon) is valid, `"INVALID:<reason>"` is invalid, anything else is malformed.
 
 ## User Directives
 
