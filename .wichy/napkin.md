@@ -34,6 +34,9 @@
 3. **[2026-05-15] Content-hash deduplication, not filename-based**
    Do instead: compute SHA-256 of PDF contents, store in `data/seen_hashes/`. Skip if hash exists. Only use filename suffix (`_1`, `_2`) when hash is new but filename collides in `processed/`.
 
+
+  5. **[2026-05-16] When moving a document, clean up its derived artifacts too**
+     Do instead: if an ingest step writes `txt/`, `summary_txt/`, `queries_txt/`, and the step gets rolled back or the document moves, delete the matching artifacts so they don't pollute downstream search as orphaned ghosts.
 4. **[2026-05-16] Validation response: accept `<VALID>` without colon**
    Do instead: parse validation responses defensively — `"VALID"` (no colon) is valid, `"INVALID:<reason>"` is invalid, anything else is malformed.
 

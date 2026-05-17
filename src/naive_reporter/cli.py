@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from naive_reporter.config import settings
-from naive_reporter.pdf_watcher import scan
+from naive_reporter.pdf_watcher import recover_orphaned_pdfs, scan
 from naive_reporter.pipeline import process_one
 
 logging.basicConfig(
@@ -31,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
     (data_dir / "summary_txt").mkdir(parents=True, exist_ok=True)
     (data_dir / "queries_txt").mkdir(parents=True, exist_ok=True)
     (data_dir / "seen_hashes").mkdir(parents=True, exist_ok=True)
+
+    recover_orphaned_pdfs()
 
     files = scan()
     if not files:
