@@ -11,154 +11,19 @@ from pathlib import Path
 from openai import APIConnectionError, APIError, APITimeoutError, OpenAI, RateLimitError
 
 from naive_reporter.config import settings
+from naive_reporter.report_generator_prompts import (
+    BULLET_GENERATION_PROMPT,
+    BULLET_RETRY_PROMPT,
+    BULLET_VALIDATION_PROMPT,
+    REPORT_GENERATION_PROMPT,
+    REPORT_RETRY_PROMPT,
+    REPORT_VALIDATION_PROMPT,
+    SYNTHETIC_QUERY_PROMPT,
+)
 from naive_reporter.search_engine import SearchEngine
 from naive_reporter.types import SearchResult
 
 logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Prompt templates
-# ---------------------------------------------------------------------------
-
-_SYNTHETIC_QUERY_PROMPT = (
-    "You are given a user request. Generate exactly 5 short search queries "
-    "(one per line, no numbering) that would help find documents relevant to "
-    "this request.\n"
-    "\n"
-    "User request:\n"
-    "---\n"
-    "{prompt}\n"
-    "---\n"
-    "\n"
-    "Search queries:\n"
-)
-
-_REPORT_GENERATION_PROMPT = (
-    "You are a research analyst. Write a detailed report that answers the "
-    "user's request based solely on the provided documents. You must not use "
-    "any outside knowledge, assumptions, or information not explicitly "
-    "present in the documents. If the documents do not contain enough "
-    "information to answer part of the request, state that explicitly.\n"
-    "\n"
-    "User request:\n"
-    "---\n"
-    "{prompt}\n"
-    "---\n"
-    "\n"
-    "Documents:\n"
-    "{documents}\n"
-    "\n"
-    "Report:\n"
-)
-
-_REPORT_RETRY_PROMPT = (
-    "You are a research analyst. A previous version of this report was "
-    "rejected by a reviewer. You must now produce a corrected report that "
-    "addresses the feedback. Use only the provided documents — no outside "
-    "knowledge.\n"
-    "\n"
-    "User request:\n"
-    "---\n"
-    "{prompt}\n"
-    "---\n"
-    "\n"
-    "Documents:\n"
-    "{documents}\n"
-    "---\n"
-    "\n"
-    "Your previous report:\n"
-    "---\n"
-    "{previous_report}\n"
-    "---\n"
-    "\n"
-    "Reviewer's feedback:\n"
-    "---\n"
-    "{feedback}\n"
-    "---\n"
-    "\n"
-    "Please write a corrected report that fully addresses the feedback.\n"
-    "\n"
-    "Corrected report:\n"
-)
-
-_REPORT_VALIDATION_PROMPT = (
-    "You are a critical reviewer. Determine whether the report is true, "
-    "fulfills the user's request, and uses ONLY knowledge from the provided "
-    "documents with no outside information or hallucination. Respond with "
-    "exactly: VALID or INVALID:<reason>\n"
-    "\n"
-    "User request:\n"
-    "---\n"
-    "{prompt}\n"
-    "---\n"
-    "\n"
-    "Documents:\n"
-    "{documents}\n"
-    "\n"
-    "Report:\n"
-    "---\n"
-    "{report}\n"
-    "---\n"
-    "\n"
-    "Your verdict:\n"
-)
-
-_BULLET_GENERATION_PROMPT = (
-    "Summarize this report into at most 3 bullet points. Each bullet point "
-    "must be at most 2 sentences and as concise as possible.\n"
-    "\n"
-    "Report:\n"
-    "---\n"
-    "{report}\n"
-    "---\n"
-    "\n"
-    "Bullet points:\n"
-)
-
-_BULLET_RETRY_PROMPT = (
-    "You are an editor. A previous version of this bullet summary was "
-    "rejected by a reviewer. Produce a corrected bullet summary that "
-    "fully addresses the feedback. Keep at most 3 bullet points, "
-    "each at most 2 sentences.\n"
-    "\n"
-    "Report:\n"
-    "---\n"
-    "{report}\n"
-    "---\n"
-    "\n"
-    "Your previous bullet summary:\n"
-    "---\n"
-    "{previous_bullets}\n"
-    "---\n"
-    "\n"
-    "Reviewer's feedback:\n"
-    "---\n"
-    "{feedback}\n"
-    "---\n"
-    "\n"
-    "Please write a corrected bullet summary.\n"
-    "\n"
-    "Corrected bullet points:\n"
-)
-
-_BULLET_VALIDATION_PROMPT = (
-    "You are a critical reviewer. Determine whether this bullet summary "
-    "accurately captures the key points of the report and follows the "
-    "constraint of at most 3 bullets with at most 2 sentences each. Respond "
-    "with exactly: VALID or INVALID:<reason>\n"
-    "\n"
-    "Report:\n"
-    "---\n"
-    "{report}\n"
-    "---\n"
-    "\n"
-    "Bullet summary:\n"
-    "---\n"
-    "{bullets}\n"
-    "---\n"
-    "\n"
-    "Your verdict:\n"
-)
 
 # Hard cap on document text to avoid huge prompts (same as query_generator.py)
 _TEXT_CAP = 50000
@@ -294,7 +159,7 @@ def _generate_queries_from_prompt(prompt: str) -> list[str]:
         api_key=settings.llm_api_key,
     )
 
-    prompt_text = _SYNTHETIC_QUERY_PROMPT.format(prompt=prompt)
+    prompt_text = SYNTHETIC_QUERY_PROMPT.format(prompt=prompt)
     logger.debug("Sending synthetic query prompt (%d chars)", len(prompt_text))
 
     try:
@@ -406,14 +271,14 @@ def _generate_report(
     )
 
     if previous and feedback:
-        prompt_text = _REPORT_RETRY_PROMPT.format(
+        prompt_text = REPORT_RETRY_PROMPT.format(
             prompt=prompt,
             documents=docs_text,
             previous_report=previous,
             feedback=feedback,
         )
     else:
-        prompt_text = _REPORT_GENERATION_PROMPT.format(
+        prompt_text = REPORT_GENERATION_PROMPT.format(
             prompt=prompt,
             documents=docs_text,
         )
@@ -458,7 +323,7 @@ def _validate_report(
     docs_text = "\n\n".join(
         f"Document: {d.stem}\n---\n{d.text[:_TEXT_CAP]}\n---" for d in documents
     )
-    prompt_text = _REPORT_VALIDATION_PROMPT.format(
+    prompt_text = REPORT_VALIDATION_PROMPT.format(
         prompt=prompt,
         documents=docs_text,
         report=report,
@@ -500,13 +365,13 @@ def _generate_bullets(
     )
 
     if previous and feedback:
-        prompt_text = _BULLET_RETRY_PROMPT.format(
+        prompt_text = BULLET_RETRY_PROMPT.format(
             report=report,
             previous_bullets=previous,
             feedback=feedback,
         )
     else:
-        prompt_text = _BULLET_GENERATION_PROMPT.format(report=report)
+        prompt_text = BULLET_GENERATION_PROMPT.format(report=report)
 
     logger.debug("Sending bullet generation prompt (%d chars)", len(prompt_text))
 
@@ -541,7 +406,7 @@ def _validate_bullets(report: str, bullets: str) -> tuple[bool, str]:
         api_key=config["api_key"],
     )
 
-    prompt_text = _BULLET_VALIDATION_PROMPT.format(
+    prompt_text = BULLET_VALIDATION_PROMPT.format(
         report=report,
         bullets=bullets,
     )

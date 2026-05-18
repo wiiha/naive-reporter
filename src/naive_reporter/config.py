@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     llm_reporting_model: str = "deepseek-v4-flash:cloud"
     llm_reporting_api_url: str = ""
     llm_reporting_api_key: str = ""
+    language_directive: str = ""
+    number_of_synthetic_user_queries: int = 5
 
     def get_reporting_client_config(self) -> dict[str, str]:
         """Resolved reporting LLM config with fallback to main LLM."""
