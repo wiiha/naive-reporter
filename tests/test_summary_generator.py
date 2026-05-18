@@ -1,6 +1,6 @@
 """Tests for summary_generator."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -9,35 +9,23 @@ from naive_reporter.summary_generator import generate_summary
 
 def test_generate_summary_returns_stripped_response() -> None:
     """LLM returns a string with whitespace — we strip it and return it."""
-    mock_response = MagicMock()
-    mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = "  This is a summary.  \n"
+    raw = "  This is a summary.  \n"
 
-    with patch("naive_reporter.summary_generator.OpenAI") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
-        mock_client_class.return_value = mock_client
+    with patch("naive_reporter.summary_generator.chat") as mock_chat:
+        mock_chat.return_value = raw
 
         result = generate_summary("some text")
         assert result == "This is a summary."
 
-        # Verify the prompt was sent with the correct text
-        call_args = mock_client.chat.completions.create.call_args
+        call_args = mock_chat.call_args
         assert call_args is not None
-        messages = call_args.kwargs["messages"]
-        assert any("Summarize" in msg["content"] for msg in messages)
+        assert "Summarize" in call_args.kwargs["user"]
 
 
 def test_generate_summary_raises_on_empty_response() -> None:
     """LLM returns whitespace-only — we raise RuntimeError."""
-    mock_response = MagicMock()
-    mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = "   \n  "
-
-    with patch("naive_reporter.summary_generator.OpenAI") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.chat.completions.create.return_value = mock_response
-        mock_client_class.return_value = mock_client
+    with patch("naive_reporter.summary_generator.chat") as mock_chat:
+        mock_chat.return_value = "   \n  "
 
         with pytest.raises(RuntimeError, match="empty summary"):
             generate_summary("some text")

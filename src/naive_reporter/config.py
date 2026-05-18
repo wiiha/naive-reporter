@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     llm_reporting_api_key: str = ""
     language_directive: str = ""
     number_of_synthetic_user_queries: int = 5
+    text_cap: int = 50000
 
     def get_reporting_client_config(self) -> dict[str, str]:
         """Resolved reporting LLM config with fallback to main LLM."""

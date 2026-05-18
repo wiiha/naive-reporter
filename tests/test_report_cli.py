@@ -53,7 +53,7 @@ class TestReportCli:
         self, monkeypatch, caplog
     ) -> None:
         """When no documents match, print warning and exit 0."""
-        from naive_reporter.report_generator import NoMatchError
+        from naive_reporter.report_pipeline import NoMatchError
 
         def fake_run_report(*args, **kwargs):
             raise NoMatchError("No documents matched")

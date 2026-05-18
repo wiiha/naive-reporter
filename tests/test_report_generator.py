@@ -4,18 +4,20 @@ from pathlib import Path
 
 import pytest
 
-from naive_reporter.report_generator import (
-    MatchedDocInfo,
+from naive_reporter.report_artifacts import (
+    create_report_dir,
+    _next_report_id,
+    write_artifacts,
+)
+from naive_reporter.report_generation import _parse_validation_response
+from naive_reporter.report_pipeline import (
     NoMatchError,
     _collect_documents,
-    _create_report_dir,
     _generate_with_validation,
-    _next_report_id,
-    _parse_validation_response,
     _read_document_texts,
-    _write_artifacts,
     run_report,
 )
+from naive_reporter.types import MatchedDocInfo
 from naive_reporter.search_engine import SearchEngine
 from naive_reporter.types import SearchResult
 
@@ -97,9 +99,7 @@ class TestCollectDocuments:
 
     def test_missing_summary_uses_placeholder(self, tmp_path: Path) -> None:
         """When summary_txt file is missing, use '[no summary]'."""
-        fake = FakeSearcher(
-            {"query_a": [SearchResult(stem="doc1", score=0.5)]}
-        )
+        fake = FakeSearcher({"query_a": [SearchResult(stem="doc1", score=0.5)]})
         engine = SearchEngine(fake, data_dir=str(tmp_path))
         engine.build_index()
 
@@ -172,7 +172,7 @@ class TestParseValidationResponse:
 
 
 # ---------------------------------------------------------------------------
-# Tests for _next_report_id and _create_report_dir
+# Tests for next_report_id and create_report_dir
 # ---------------------------------------------------------------------------
 
 
@@ -203,7 +203,7 @@ class TestCreateReportDir:
 
     def test_creates_directory(self, tmp_path: Path) -> None:
         data_dir = tmp_path
-        report_dir = _create_report_dir(data_dir)
+        report_dir = create_report_dir(data_dir)
         assert report_dir.exists()
         assert report_dir.is_dir()
         from datetime import date
@@ -213,8 +213,8 @@ class TestCreateReportDir:
 
     def test_increments_when_directory_exists(self, tmp_path: Path) -> None:
         data_dir = tmp_path
-        dir1 = _create_report_dir(data_dir)
-        dir2 = _create_report_dir(data_dir)
+        dir1 = create_report_dir(data_dir)
+        dir2 = create_report_dir(data_dir)
         assert dir1 != dir2
 
 
@@ -318,7 +318,7 @@ class TestWriteArtifacts:
             )
         ]
 
-        _write_artifacts(
+        write_artifacts(
             report_dir=report_dir,
             prompt="test prompt",
             queries=["q1", "q2", "q3"],
@@ -327,22 +327,18 @@ class TestWriteArtifacts:
             bullets="- bullet 1",
         )
 
-        assert (
-            (report_dir / "01_prompt.txt").read_text(encoding="utf-8")
-            == "test prompt\n"
-        )
-        assert (
-            (report_dir / "02_queries.txt").read_text(encoding="utf-8")
-            == "q1\nq2\nq3\n"
-        )
-        assert (
-            (report_dir / "04_report.txt").read_text(encoding="utf-8")
-            == "test report\n"
-        )
-        assert (
-            (report_dir / "05_bullets.txt").read_text(encoding="utf-8")
-            == "- bullet 1\n"
-        )
+        assert (report_dir / "01_prompt.txt").read_text(
+            encoding="utf-8"
+        ) == "test prompt\n"
+        assert (report_dir / "02_queries.txt").read_text(
+            encoding="utf-8"
+        ) == "q1\nq2\nq3\n"
+        assert (report_dir / "04_report.txt").read_text(
+            encoding="utf-8"
+        ) == "test report\n"
+        assert (report_dir / "05_bullets.txt").read_text(
+            encoding="utf-8"
+        ) == "- bullet 1\n"
 
         # Check documents file contains stem, summary, query, score
         docs_text = (report_dir / "03_documents.txt").read_text(encoding="utf-8")
@@ -376,7 +372,7 @@ class TestRunReport:
             return ["q1", "q2", "q3", "q4", "q5"]
 
         monkeypatch.setattr(
-            "naive_reporter.report_generator._generate_queries_from_prompt",
+            "naive_reporter.report_pipeline.generate_synthetic_queries",
             fake_generate_queries,
         )
 

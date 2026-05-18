@@ -5,7 +5,8 @@ from naive_reporter.config import settings
 # ---------------------------------------------------------------------------
 
 SYNTHETIC_QUERY_PROMPT = (
-    f"You are given a user request. Generate exactly {settings.number_of_synthetic_user_queries} search queries "
+    f"You are given a user request. Generate exactly "
+    f"{settings.number_of_synthetic_user_queries} search queries "
     "(one per line, no numbering) that would help find documents relevant to "
     "this request.\n"
     "\n"

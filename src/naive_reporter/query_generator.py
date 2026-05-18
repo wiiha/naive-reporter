@@ -2,9 +2,8 @@
 
 import logging
 
-from openai import OpenAI
-
 from naive_reporter.config import settings
+from naive_reporter.llm_client import chat
 
 logger = logging.getLogger(__name__)
 
@@ -30,28 +29,18 @@ def generate_queries(text: str) -> list[str]:
     RuntimeError
         If the LLM response does not contain exactly 5 non-empty lines.
     """
-    client = OpenAI(
-        base_url=settings.llm_api_url,
-        api_key=settings.llm_api_key,
-    )
-
-    prompt = _QUERY_PROMPT_TEMPLATE.format(
-        text=text[:50000]
-    )  # hard cap to avoid huge prompts
+    prompt = _QUERY_PROMPT_TEMPLATE.format(text=text[: settings.text_cap])
 
     logger.debug("Sending query-generation prompt (%d chars)", len(prompt))
 
-    response = client.chat.completions.create(
+    raw = chat(
+        base_url=settings.llm_api_url,
+        api_key=settings.llm_api_key,
         model=settings.llm_model,
-        messages=[
-            {"role": "system", "content": "You generate search queries."},
-            {"role": "user", "content": prompt},
-        ],
-        # temperature=0.7,
-        # max_tokens=200,
+        system="You generate search queries.",
+        user=prompt,
     )
 
-    raw = response.choices[0].message.content or ""
     lines = [line.strip() for line in raw.splitlines() if line.strip()]
 
     if len(lines) != 5:

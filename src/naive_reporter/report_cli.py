@@ -5,7 +5,7 @@ import logging
 import sys
 
 from naive_reporter.config import settings
-from naive_reporter.report_generator import NoMatchError, run_report
+from naive_reporter.report_pipeline import NoMatchError, run_report
 
 logger = logging.getLogger(__name__)
 
