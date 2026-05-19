@@ -50,3 +50,8 @@
 
 3. **[2026-05-15] Keep it simple, keep it straight**
    Do instead: state assumptions plainly, write linear code, minimize indirection, and prefer duplication over the wrong abstraction.
+
+## Testing & Environment Guardrails
+
+1. **[2026-05-18] ChromaDB HNSW index causes OOM killer under pytest collection**
+   Do instead: use `chromadb.Client()` (in-memory) in unit tests, not `PersistentClient`; run Chroma-heavy tests individually or with `-n1`; never collect them alongside the full suite in low-RAM environments.

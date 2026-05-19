@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from naive_reporter.report_artifacts import (
-    create_report_dir,
     _next_report_id,
+    create_report_dir,
     write_artifacts,
 )
 from naive_reporter.report_generation import _parse_validation_response
@@ -17,9 +17,8 @@ from naive_reporter.report_pipeline import (
     _read_document_texts,
     run_report,
 )
-from naive_reporter.types import MatchedDocInfo
 from naive_reporter.search_engine import SearchEngine
-from naive_reporter.types import SearchResult
+from naive_reporter.types import MatchedDocInfo, SearchResult
 
 # ---------------------------------------------------------------------------
 # Fake Searcher for testing document collection

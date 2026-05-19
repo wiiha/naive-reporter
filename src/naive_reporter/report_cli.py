@@ -4,10 +4,20 @@ import argparse
 import logging
 import sys
 
+from naive_reporter.bm25_searcher import BM25Searcher
 from naive_reporter.config import settings
 from naive_reporter.report_pipeline import NoMatchError, run_report
+from naive_reporter.search_protocol import Searcher
+from naive_reporter.semantic_searcher import SemanticSearcher
 
 logger = logging.getLogger(__name__)
+
+
+def _make_searcher(name: str) -> Searcher:
+    """Return a Searcher instance by name."""
+    if name == "semantic":
+        return SemanticSearcher()
+    return BM25Searcher()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,6 +41,12 @@ def main(argv: list[str] | None = None) -> int:
         default=settings.data_dir,
         help="Data directory",
     )
+    parser.add_argument(
+        "--searcher",
+        choices=["bm25", "semantic"],
+        default="bm25",
+        help="Search backend (default: bm25)",
+    )
     args = parser.parse_args(argv)
 
     if not args.prompt.strip():
@@ -47,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
             prompt=args.prompt,
             k=args.k,
             data_dir=args.data_dir,
+            searcher=_make_searcher(args.searcher),
         )
         print(f"Report saved to: {report_dir}")
         return 0

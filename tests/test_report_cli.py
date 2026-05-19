@@ -34,7 +34,7 @@ class TestReportCli:
 
         fake_dir = Path("/fake/report/dir")
 
-        def fake_run_report(prompt, k, data_dir):
+        def fake_run_report(prompt, k, data_dir, searcher=None):
             assert prompt == "What is the weather?"
             assert k == 5
             return fake_dir

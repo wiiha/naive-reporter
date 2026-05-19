@@ -14,6 +14,7 @@ from naive_reporter.report_generation import (
     validate_report,
 )
 from naive_reporter.search_engine import SearchEngine
+from naive_reporter.search_protocol import Searcher
 from naive_reporter.synthetic_query_generator import (
     generate_queries as generate_synthetic_queries,
 )
@@ -30,6 +31,7 @@ def run_report(
     prompt: str,
     k: int = 5,
     data_dir: str | None = None,
+    searcher: Searcher | None = None,
 ) -> Path:
     """Run the full report pipeline and return the report directory path.
 
@@ -44,6 +46,7 @@ def run_report(
         raise ValueError("prompt must not be empty")
 
     root = Path(data_dir) if data_dir else Path(settings.data_dir)
+    _searcher = searcher if searcher is not None else BM25Searcher()
 
     # 1. Generate synthetic queries from the prompt
     logger.info("Generating synthetic queries ...")
@@ -52,7 +55,7 @@ def run_report(
 
     # 2. Build search engine and collect matched documents
     logger.info("Building search index ...")
-    search_engine = SearchEngine(BM25Searcher(), data_dir=str(root))
+    search_engine = SearchEngine(_searcher, data_dir=str(root))
     search_engine.build_index()
 
     matched_docs = _collect_documents(queries, search_engine, root, k)

@@ -8,6 +8,7 @@ from pathlib import Path
 from naive_reporter.bm25_searcher import BM25Searcher
 from naive_reporter.config import settings
 from naive_reporter.search_engine import SearchEngine
+from naive_reporter.semantic_searcher import SemanticSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,13 @@ def _read_file(data_dir: Path, subdir: str, stem: str) -> str | None:
     except (OSError, UnicodeDecodeError):
         logger.warning("Cannot read %s", path, exc_info=True)
         return None
+
+
+def _make_searcher(name: str) -> BM25Searcher | SemanticSearcher:
+    """Return a Searcher instance by name."""
+    if name == "semantic":
+        return SemanticSearcher()
+    return BM25Searcher()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,6 +49,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--show-summary", action="store_true", help="Print document summary"
     )
+    parser.add_argument(
+        "--searcher",
+        choices=["bm25", "semantic"],
+        default="bm25",
+        help="Search backend (default: bm25)",
+    )
     args = parser.parse_args(argv)
 
     if not args.query.strip():
@@ -52,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         format="%(asctime)s  %(levelname)-8s  %(message)s",
     )
 
-    engine = SearchEngine(BM25Searcher(), data_dir=args.data_dir)
+    engine = SearchEngine(_make_searcher(args.searcher), data_dir=args.data_dir)
     engine.build_index()
     results = engine.search(args.query, k=args.k)
 

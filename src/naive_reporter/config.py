@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     language_directive: str = ""
     number_of_synthetic_user_queries: int = 5
     text_cap: int = 50000
+    embedding_model: str = "ibm-granite/granite-embedding-278m-multilingual"
+    chroma_persist_dir: str = ""
+    chunk_size: int = 300
+    chunk_overlap: int = 50
 
     def get_reporting_client_config(self) -> dict[str, str]:
         """Resolved reporting LLM config with fallback to main LLM."""
